@@ -1,0 +1,42 @@
+{
+  "version": "0.01",
+  "description": {
+    "ccradar": "Cascade Chips Radar"
+  },
+  "calibration": {
+    "ccradar": {
+      "antenna": "calibration/cascade/antenna_cfg.json",
+      "coupling": "",
+      "heatmap": "",
+      "phase": ""
+    }
+  },
+  "datastore": {
+    "folders": [
+      {
+        "codename": "outdoor0",
+        "path": "outdoor0"
+      }
+    ],
+    "paths": {
+      "ccradar": {
+        "config": "cascade/config.json",
+        "raw": {
+          "timestamp": "cascade/adc_samples/timestamps.txt",
+          "data": "cascade/adc_samples",
+          "filename_prefix": "frame_"
+        },
+        "heatmap": {
+          "timestamp": "cascade/heatmaps/timestamps.txt",
+          "data": "cascade/heatmaps/data",
+          "filename_prefix": "heatmap_"
+        },
+        "pointcloud": {
+          "timestamp": "",
+          "data": "",
+          "filename_prefix": ""
+        }
+      }
+    }
+  }
+}

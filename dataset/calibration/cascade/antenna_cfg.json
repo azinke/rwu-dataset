@@ -1,0 +1,44 @@
+{
+    "rx_tx_comment": "Number of TX and RX antenna",
+    "nrx": 16,
+    "ntx": 12,
+
+    "fdeisgn_commentt": "Design frequency in GHz",
+    "fdesign": 76.8,
+
+    "rxl_comment": "RX antenna layout in unit of 1/2 wavelength",
+    "rxl": [
+        [0, 0, 0],
+        [1 ,1, 0],
+        [2 ,2, 0],
+        [3 ,3, 0],
+        [4 ,11, 0],
+        [5 ,12, 0],
+        [6 ,13, 0],
+        [7 ,14, 0],
+        [8 ,46, 0],
+        [9 ,47, 0],
+        [10, 48, 0],
+        [11, 49, 0],
+        [12, 50, 0],
+        [13, 51, 0],
+        [14, 52, 0],
+        [15, 53, 0]
+    ],
+
+    "txl_comment": "TX antenna layout in unit of 1/2 wavelength",
+    "txl": [
+        [0, 0, 0],
+        [1, 4, 0],
+        [2, 8, 0],
+        [3, 9, 1],
+        [4, 10, 4],
+        [5, 11, 6],
+        [6, 12, 0],
+        [7, 16, 0],
+        [8, 20, 0],
+        [9, 24, 0],
+        [10, 28, 0],
+        [11, 32, 0]
+    ]
+}

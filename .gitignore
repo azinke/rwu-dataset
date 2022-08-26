@@ -1,0 +1,13 @@
+# Virtual environment
+venv/
+
+# Dataset
+dataset/*
+!dataset/*.json
+!dataset/calibration
+
+# Cache files
+*cache*/
+
+# Folder used generated data
+output
