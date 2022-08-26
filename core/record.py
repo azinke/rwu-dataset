@@ -158,6 +158,7 @@ class Record:
                 self._kwargs.get("velocity_view"),
                 self._kwargs.get("bird_eye_view"),
                 self._kwargs.get("polar"),
+                camera_view=self._kwargs.get("camera_view"),
                 show=False,
             )
         plt.savefig(f"{self._output_dir}/radar_{idx:04}.jpg", dpi=self._dpi)
@@ -191,7 +192,7 @@ class Record:
         files = sorted(files)
         height, width, _ = plt.imread(files[0]).shape
         fourcc = cv.VideoWriter_fourcc(*'MJPG')
-        video = cv.VideoWriter(inputdir + f"/{self.codename}.avi", fourcc, 25, (width, height))
+        video = cv.VideoWriter(inputdir + f"/{self.codename}.avi", fourcc, 12, (width, height))
         for idx, img in enumerate(files):
             print(
                 f"[ ========= {100 * idx/len(files): 2.2f}% ========= ]\r",

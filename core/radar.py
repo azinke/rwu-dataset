@@ -239,7 +239,7 @@ class SCRadar(Lidar):
                     [1]: Range
                     [2]: Elevation
                     [3]: Velocity
-                    [4]: Intensity of reflection in dB
+                    [4]: Intensity of reflection in dB or SNR
 
                 @see: showHeatmapFromRaw
 
@@ -247,8 +247,8 @@ class SCRadar(Lidar):
             self._to_cartesian(hmap)
         """
         pcld = np.zeros(hmap.shape)
-        pcld[:, 0] = hmap[:, 1] * np.cos(hmap[:, 2]) * np.cos(hmap[:, 0])
-        pcld[:, 1] = hmap[:, 1] * np.cos(hmap[:, 2]) * np.sin(hmap[:, 0])
+        pcld[:, 0] = hmap[:, 1] * np.cos(hmap[:, 2]) * np.sin(hmap[:, 0])
+        pcld[:, 1] = hmap[:, 1] * np.cos(hmap[:, 2]) * np.cos(hmap[:, 0])
         pcld[:, 2] = hmap[:, 1] * np.sin(hmap[:, 2])
         pcld[:, 3:] = hmap[:, 3:]
         return pcld
@@ -663,7 +663,7 @@ class SCRadar(Lidar):
         mimo_dfft = np.sum(np.abs(mimo_dfft) ** 2, 0)
 
         # OS-CFAR for object detection
-        _, detections = rdsp.nq_cfar_2d(mimo_dfft, 16, 1, 0.75, 25)
+        _, detections = rdsp.nq_cfar_2d(mimo_dfft, 8, 1)
 
         # Restructure data based on the virtual antenna
         va = rdsp.virtual_array(
@@ -735,12 +735,13 @@ class SCRadar(Lidar):
         # those detections are not reliable
         pcl = pcl[pcl[:, 1] < (0.95 * rmax)]
 
+        xlabel: str = ""
+        ylabel: str = ""
+
         if not polar:
             pcl = self._to_cartesian(pcl)
-            pcl = pcl[:, (1, 0, 2, 3, 4)]  # swap range and azimuth
         if bird_eye_view:
             ax = plt.axes()
-            ax.set_title("Radar Bird Eye View")
             ax.set_title(f"BEV | Frame {self.index:04}")
             ax.scatter(
                 pcl[:, 0],
@@ -749,7 +750,23 @@ class SCRadar(Lidar):
                 c=pcl[:, 4],
                 cmap="viridis",
             )
-            ax.set_xlabel("Azimuth (m)")
+            ax.set_ylim(0, rmax)
+            xlabel = "Azimuth"
+            ylabel = "Range"
+            ax.set(facecolor="black")
+        elif kwargs.get("camera_view", False):
+            ax = plt.axes()
+            ax.set_title(f"Radar Camera View | Frame {self.index:04}")
+            ax.scatter(
+                pcl[:, 0],      # Azimuth
+                pcl[:, 2],      # Elevation
+                pcl[:, 4],      # SNR
+                c=pcl[:, 1],    # Range
+                cmap="viridis",
+            )
+            xlabel = "Azimuth"
+            ylabel = "Elevation"
+            ax.set_ylim(-8, 8)
             ax.set(facecolor="black")
         else:
             ax = plt.axes(projection="3d")
@@ -763,16 +780,22 @@ class SCRadar(Lidar):
                 cmap=plt.cm.get_cmap(),
                 s=4.0, # Marker size
             )
+            ax.set_ylim(0, rmax)
             plt.colorbar(map, ax=ax)
-
-        ax.set_xlabel("Azimuth")
-        ax.set_ylabel("Range")
+            xlabel = "Azimuth"
+            ylabel = "Range"
 
         if polar:
             ax.set_xlim(-1, 1)
+            xlabel += " (rad)"
+            ylabel += " (rad)"
         else:
             ax.set_xlim(-rmax/2, rmax/2)
-        ax.set_ylim(0, rmax)
+            xlabel += " (m)"
+            ylabel += " (m)"
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
         if kwargs.get("show", True):
             plt.show()
@@ -954,8 +977,6 @@ class SCRadar(Lidar):
 
         if not polar:
             hmap = self._to_cartesian(hmap)
-            # Swap range and azimuth axis
-            hmap = hmap[:, (1, 0, 2, 3, 4)]
 
         ax = plt.axes(projection="3d")
         ax.set_title("4D-FFT processing of raw ADC samples")

@@ -95,6 +95,13 @@ def main () -> None:
         default=False,
     )
     parser.add_argument(
+        "--camera-view",
+        "-cv",
+        help="Request a camera view rendering",
+        action="store_true",
+        default=False
+    )
+    parser.add_argument(
         "--bird-eye-view",
         "-bev",
         help="Request a bird eye view rendering",
@@ -236,7 +243,8 @@ def main () -> None:
                     record.ccradar.showPointcloudFromRaw(
                         args.velocity_view,
                         args.bird_eye_view,
-                        args.polar
+                        args.polar,
+                        camera_view=args.camera_view,
                     )
                     success("Successfully closed!")
                     sys.exit(0)
@@ -287,6 +295,7 @@ def main () -> None:
                     bird_eye_view=args.bird_eye_view,
                     polar=args.polar,
                     start_index=args.start_index,
+                    camera_view=args.camera_view,
                     pointcloud=True,
                 )
                 success("Radar pointcloud generated with success!")
@@ -298,6 +307,7 @@ def main () -> None:
                 no_sidelobe=args.no_sidelobe,
                 velocity_view=args.velocity_view,
                 start_index=args.start_index,
+                camera_view=args.camera_view,
                 heatmap_3d=True,
             )
             success("Radar 3D heatmap generated with success!")
