@@ -643,27 +643,29 @@ class SCRadar(Lidar):
         # ns: Number of samples per chirp
         ntx, nrx, nc, ns = adc_samples.shape
 
-        rsignal = np.zeros((ntx, nrx, nc, ns), dtype=np.complex64)
+        _, _, Nc, Ns = self._get_fft_size(None, None, nc, ns)
+
+        rsignal = np.zeros((ntx, nrx, Nc, Ns), dtype=np.complex64)
 
         for tidx in range(ntx):
             for ridx in range(nrx):
                 samples = adc_samples[tidx, ridx, :, :]
                 samples *= np.blackman(ns).reshape(1, -1)
-                rfft = np.fft.fft(samples, ns, -1)
+                rfft = np.fft.fft(samples, Ns, -1)
 
                 # Doppler-FFT
                 rfft *= np.blackman(nc).reshape(-1, 1)
-                dfft = np.fft.fft(rfft, nc, -2)
+                dfft = np.fft.fft(rfft, Nc, -2)
                 # dfft = rdsp.velocity_compensation(dfft, ntx, nrx, nc)
                 dfft = np.fft.fftshift(dfft, -2)
 
                 rsignal[tidx, ridx, :, :] = dfft
 
-        mimo_dfft = rsignal.reshape(ntx * nrx, nc, ns)
+        mimo_dfft = rsignal.reshape(ntx * nrx, Nc, Ns)
         mimo_dfft = np.sum(np.abs(mimo_dfft) ** 2, 0)
 
         # OS-CFAR for object detection
-        _, detections = rdsp.nq_cfar_2d(mimo_dfft, 8, 1)
+        _, detections = rdsp.nq_cfar_2d(mimo_dfft, 16, 2, 0.75, 15)
 
         # Restructure data based on the virtual antenna
         va = rdsp.virtual_array(
@@ -681,12 +683,12 @@ class SCRadar(Lidar):
         rbins, vbins, abins, ebins = self._get_bins(Ns, Nc, Na, Ne)
 
         # Azimuth estimation
-        va *= np.blackman(va_na).reshape(1, -1, 1, 1)
+        # va *= np.blackman(va_na).reshape(1, -1, 1, 1)
         afft = np.fft.fft(va, Na, 1)
         afft = np.fft.fftshift(afft, 1)
 
         # Elevation esitamtion
-        _afft = afft * np.blackman(va_ne).reshape(-1, 1, 1, 1)
+        _afft = afft # * np.blackman(va_ne).reshape(-1, 1, 1, 1)
         efft = np.fft.fft(_afft, Ne, 0)
         efft = np.fft.fftshift(efft, 0)
 
