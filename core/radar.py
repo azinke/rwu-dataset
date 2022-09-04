@@ -654,7 +654,6 @@ class SCRadar(Lidar):
                 rfft = np.fft.fft(samples, Ns, -1)
 
                 # Doppler-FFT
-                rfft *= np.blackman(nc).reshape(-1, 1)
                 dfft = np.fft.fft(rfft, Nc, -2)
                 # dfft = rdsp.velocity_compensation(dfft, ntx, nrx, nc)
                 dfft = np.fft.fftshift(dfft, -2)
@@ -665,7 +664,7 @@ class SCRadar(Lidar):
         mimo_dfft = np.sum(np.abs(mimo_dfft) ** 2, 0)
 
         # OS-CFAR for object detection
-        _, detections = rdsp.nq_cfar_2d(mimo_dfft, 16, 2, 0.75, 15)
+        _, detections = rdsp.nq_cfar_2d(mimo_dfft, 8, 1)
 
         # Restructure data based on the virtual antenna
         va = rdsp.virtual_array(
@@ -673,7 +672,6 @@ class SCRadar(Lidar):
             self.calibration.antenna.txl,
             self.calibration.antenna.rxl
         )
-        va_ne, va_na, _, _ = va.shape
 
         # Optional FFT size respectively for the elevation, azimuth,
         # doppler and range axis
@@ -683,13 +681,11 @@ class SCRadar(Lidar):
         rbins, vbins, abins, ebins = self._get_bins(Ns, Nc, Na, Ne)
 
         # Azimuth estimation
-        # va *= np.blackman(va_na).reshape(1, -1, 1, 1)
         afft = np.fft.fft(va, Na, 1)
         afft = np.fft.fftshift(afft, 1)
 
         # Elevation esitamtion
-        _afft = afft # * np.blackman(va_ne).reshape(-1, 1, 1, 1)
-        efft = np.fft.fft(_afft, Ne, 0)
+        efft = np.fft.fft(afft, Ne, 0)
         efft = np.fft.fftshift(efft, 0)
 
         pcl = np.zeros((len(detections), 5))
@@ -780,7 +776,7 @@ class SCRadar(Lidar):
                 pcl[:, 2],
                 c=pcl[:, 3] if velocity_view else pcl[:, 4],
                 cmap=plt.cm.get_cmap(),
-                s=4.0, # Marker size
+                s=pcl[:, 4] / 2, # Marker size
             )
             ax.set_ylim(0, rmax)
             plt.colorbar(map, ax=ax)
@@ -830,13 +826,11 @@ class SCRadar(Lidar):
         virtual_array *= np.blackman(va_ns).reshape(1, 1, -1)
         rfft = np.fft.fft(virtual_array, Ns, -1)
 
-        rfft *= np.blackman(va_nc).reshape(1, -1, 1)
         # Doppler-FFT
         dfft = np.fft.fft(rfft, Nc, 1)
         dfft = np.fft.fftshift(dfft, 1)
         # dfft = rdsp.velocity_compensation(dfft, ntx, nrx, nc)
 
-        dfft *= np.blackman(va_na).reshape(-1, 1, 1)
         # Azimuth estimation
         afft = np.fft.fft(dfft, Na, 0)
         afft = np.fft.fftshift(afft, 0)
@@ -1024,12 +1018,13 @@ class SCRadar(Lidar):
 
         # Noise filtering mask
         sp = np.sum(signal_power, 1)
-        mask, _ = rdsp.nq_cfar_2d(sp, self.CFAR_WS, self.CFAR_GC)
+        mask, _ = rdsp.nq_cfar_2d(sp, self.CFAR_WS, self.CFAR_GC, 0.65)
 
-        dpcl = np.log10(signal_power)
+        dpcl = 10 * np.log10(signal_power)
         dpcl = np.sum(dpcl, 1)
-        dpcl *= mask
+        dpcl -= np.min(dpcl)
         dpcl /= np.max(dpcl)
+        dpcl *= mask
 
         # Number of close range bins to skip
         roffset: int = 15
@@ -1060,7 +1055,6 @@ class SCRadar(Lidar):
             _, ax = plt.subplots()
             color = ax.pcolormesh(az, rg, dpcl, cmap="viridis")
             ax.set_xlabel("Azimuth (rad)")
-
         ax.set_ylabel("Range (m)")
         ax.set_title(f"Frame {self.index:04}")
         if show:

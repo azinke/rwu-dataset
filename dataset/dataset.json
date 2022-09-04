@@ -16,6 +16,30 @@
       {
         "codename": "outdoor0",
         "path": "outdoor0"
+      },
+      {
+        "codename": "outdoor1",
+        "path": "outdoor1"
+      },
+      {
+        "codename": "outdoor2",
+        "path": "outdoor2"
+      },
+      {
+        "codename": "foam",
+        "path": "indoor_foam0"
+      },
+      {
+        "codename": "car0",
+        "path": "outdoor_car0"
+      },
+      {
+        "codename": "car1",
+        "path": "outdoor_car1"
+      },
+      {
+        "codename": "room0",
+        "path": "indoor_room0"
       }
     ],
     "paths": {
