@@ -6,24 +6,24 @@
   "calibration": {
     "ccradar": {
       "antenna": "calibration/cascade/antenna_cfg.json",
-      "coupling": "",
+      "coupling": "calibration/cascade/coupling_cfg.json",
       "heatmap": "",
-      "phase": ""
+      "phase": "calibration/cascade/waveform_calib_cfg.json"
     }
   },
   "datastore": {
     "folders": [
       {
         "codename": "outdoor0",
-        "path": "outdoor0"
+        "path": "outdoor-25082200"
       },
       {
         "codename": "outdoor1",
-        "path": "outdoor1"
+        "path": "outdoor-25082201"
       },
       {
         "codename": "outdoor2",
-        "path": "outdoor2"
+        "path": "outdoor-25082202"
       },
       {
         "codename": "foam",
@@ -39,7 +39,51 @@
       },
       {
         "codename": "room0",
-        "path": "indoor_room0"
+        "path": "room-02092200"
+      },
+      {
+        "codename": "room1",
+        "path": "room-05092201"
+      },
+      {
+        "codename": "room2",
+        "path": "room-05092202"
+      },
+      {
+        "codename": "parking0",
+        "path": "parking-05092200"
+      },
+      {
+        "codename": "parking1",
+        "path": "parking-05092201"
+      },
+      {
+        "codename": "parking2",
+        "path": "parking-05092202"
+      },
+      {
+        "codename": "parking3",
+        "path": "parking-05092203"
+      },
+      {
+        "codename": "parking4",
+        "path": "parking-05092204"
+      },
+      {
+        "codename": "calib0",
+        "path": "coupling-calib-05092201"
+      },
+      {
+        "codename": "calib1",
+        "path": "calib-05092201"
+      },
+      {
+        "codename": "calib2",
+        "path": "calib-05092202"
+      },
+      {
+        "codename": "calib3",
+        "path": "calib-05092203"
       }
     ],
     "paths": {

@@ -51,20 +51,25 @@ class CouplingCalibration:
     """Coupling calibration.
 
     Attributes:
-        num_rx (int): Number of reception antenna
-        num_tx (int): Number of transmission antenna
-        num_range_bins (int): Number of range bins
-        num_doppler_bins (int): Number of doppler frequency bins
-        data (list[float]): Array description coupling calibartion data
-
-    TODO: Process rge raw calibration data
+        nrx (int): Number of reception antenna
+        ntx (int): Number of transmission antenna
+        ns (int): Number of ADC samples
+        data (NDArray): Matrix describing the coupling calibartion
     """
 
     def __init__(self, filepath: str) -> None:
         """Init coupling calibration."""
         with open(os.path.join(ROOTDIR, filepath), "r") as fh:
-            # TODO: Load coupling calibration matrix
-            pass
+            config = json.load(fh)
+        self.nrx = config["nrx"]
+        self.ntx = config["ntx"]
+
+        binfile: str = os.sep.join([*filepath.split("/")[:-1], config["data"]])
+        binfile = os.path.join(ROOTDIR, binfile)
+        self.data = np.fromfile(binfile, dtype=np.float32, count=-1)
+        self.data = self.data.reshape(self.ntx, self.nrx, 2)
+        self.data = self.data[:, :, 0] + 1j * self.data[:, :, 1]
+        self.data = self.data.reshape(self.ntx, self.nrx, 1, 1)
 
 
 class HeatmapConfiguration:
@@ -124,19 +129,35 @@ class PhaseCalibration:
     """Phase/Frequency calibration.
 
     Attributes:
-        num_rx (int): Number of reception antenna
-        num_tx (int): Number of transmission antenna
-        frequency_slope (float): Frequency slope
-        sampling_rate (float): ADC sampling frequency in Herz
-        frequency_calibration_matrix (list[float]): Sensor frequency
-        calibration matrix
+        nrx (int): Number of reception antenna
+        ntx (int): Number of transmission antenna
+        phase (NDarray): Phase calibration matrix
+        frequency (NDarray): Frequency calibration matrix
     """
 
     def __init__(self, filepath: str) -> None:
         """Init Phase/Frequency configuration."""
         with open(os.path.join(ROOTDIR, filepath), "r") as fh:
-            # Load Phase/Amplitude calibration file
-            pass
+            config = json.load(fh)
+        self.nrx: int = config["nrx"]
+        self.ntx: int = config["ntx"]
+
+        # Load phase calibration
+        phase_calib_file: str = os.sep.join(
+            [*filepath.split("/")[:-1], config["data"]["phase"]]
+        )
+        phase_calib_file = os.path.join(ROOTDIR, phase_calib_file)
+        self.phase = np.fromfile(phase_calib_file, dtype=np.float64, count=-1)
+        self.phase = self.phase.reshape(self.ntx, self.nrx, 2)
+        self.phase = self.phase[:, :, 0] + 1j * self.phase[:, :, 1]
+
+        # Load frequency calibration
+        freq_calib_file: str = os.sep.join(
+            [*filepath.split("/")[:-1], config["data"]["frequency"]]
+        )
+        freq_calib_file = os.path.join(ROOTDIR, freq_calib_file)
+        self.frequency = np.fromfile(freq_calib_file, dtype=np.float64, count=-1)
+        self.frequency = self.frequency.reshape(self.ntx, self.nrx)
 
 
 class SCRadarCalibration:
@@ -168,7 +189,7 @@ class SCRadarCalibration:
             NOTE: See dataset.json
         """
         self.antenna = AntennaConfig(config["antenna"])
-        # self.coupling = CouplingCalibration(config["coupling"])
+        self.coupling = CouplingCalibration(config["coupling"])
 
     def load_waveform_config(self, descriptor: str) -> None:
         """Load the waveform configuration of a given subset of the dataset.
@@ -200,13 +221,7 @@ class SCRadarCalibration:
 
     def get_coupling_calibration(self) -> np.array:
         """Return the coupling calibration array to apply on the range fft."""
-        return np.array(self.coupling.data).reshape(
-            self.coupling.num_tx,
-            self.coupling.num_rx,
-            1,
-            self.waveform.num_adc_samples_per_chirp,
-        )
-
+        return self.coupling.data
 
 class CCRadarCalibration(SCRadarCalibration):
     """Cascade Chip Radar Calibration.
@@ -218,7 +233,7 @@ class CCRadarCalibration(SCRadarCalibration):
         coupling: Antenna coupling calibration
         heatmap: Heatmap recording configuration
         waveform: Waveform generation parameters and calibration
-        phase: Phase and frequency calibration
+        phase_freq_calib: Phase and frequency calibration
     """
 
     def __init__(self, config: dict[str, str]) -> None:
@@ -233,52 +248,35 @@ class CCRadarCalibration(SCRadarCalibration):
         NOTE: See dataset.json
         """
         super(CCRadarCalibration, self).__init__(config)
-        # self.phase = PhaseCalibration(config["phase"])
+        self.phase_freq_calib = PhaseCalibration(config["phase"])
 
     def get_phase_calibration(self) -> np.array:
         """Return the phase calibration array."""
         # Phase calibrationm atrix
-        pm = np.array(self.phase.phase_calibration_matrix)
-        pm = pm[::2] + 1j * pm[1::2]
-        pm = pm[0] / pm
+        pm = self.phase_freq_calib.phase
         return pm.reshape(
-            self.phase.num_tx,
-            self.phase.num_rx,
+            self.phase_freq_calib.ntx,
+            self.phase_freq_calib.nrx,
             1,
             1
         )
 
     def get_frequency_calibration(self) -> np.array:
         """Return the frequency calibration array."""
-        num_tx: int = self.phase.num_tx
-        num_rx: int = self.phase.num_rx
+        ntx: int = self.phase_freq_calib.ntx
+        nrx: int = self.phase_freq_calib.nrx
 
-        # Calibration frequency slope
-        fcal_slope: float = self.phase.frequency_slope
-        # Calibration sampling rate
-        cal_srate: int = self.phase.sampling_rate
+        fcal_matrix = self.phase_freq_calib.frequency
 
-        fcal_matrix = np.array(self.phase.frequency_calibration_matrix)
+        fslope: float = self.waveform.fslope
+        fsample: float = self.waveform.fsample
 
-        fslope: float = self.waveform.frequency_slope
-        srate: int = self.waveform.adc_sample_frequency
-
-        # Delta P
-        # 
-        dp = fcal_matrix - fcal_matrix[0]
-
-        cal_matrix = 2 * np.pi * dp * (fslope / fcal_slope) * (cal_srate / srate)
-        cal_matrix /= self.waveform.num_adc_samples_per_chirp
-        cal_matrix.reshape(num_tx, num_rx)
+        cal_matrix = fcal_matrix * (fslope / fsample)
+        cal_matrix /= self.waveform.ns
         cal_matrix = np.expand_dims(cal_matrix, -1) * np.arange(
-            self.waveform.num_adc_samples_per_chirp
+            self.waveform.ns
         )
-        return np.exp(-1j * cal_matrix).reshape(
-            num_tx,
-            num_rx,
-            1,
-            self.waveform.num_adc_samples_per_chirp
-        )
+        return np.exp(-1j * cal_matrix).reshape( ntx, nrx, 1, self.waveform.ns)
 
 
 class Calibration:

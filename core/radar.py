@@ -422,7 +422,7 @@ class SCRadar(Lidar):
         # Remove DC bias
         adc_samples -= np.mean(adc_samples)
 
-        return adc_samples
+        adc_samples -= self.calibration.get_coupling_calibration()
 
         if self.sensor != "scradar":
             adc_samples *= self.calibration.get_frequency_calibration()
@@ -612,17 +612,14 @@ class SCRadar(Lidar):
         rfft = np.fft.fft(virtual_array, Ns, -1)
 
         # Doppler-FFT
-        rfft *= np.blackman(va_nc).reshape(1, 1, -1, 1)
         dfft = np.fft.fft(rfft, Nc, -2)
         dfft = np.fft.fftshift(dfft, -2)
         # dfft = rdsp.velocity_compensation(dfft, ntx, nrx, nc)
 
-        dfft *= np.blackman(va_na).reshape(1, -1, 1, 1)
         # Azimuth estimation
         afft = np.fft.fft(dfft, Na, 1)
         afft = np.fft.fftshift(afft, 1)
 
-        afft *= np.blackman(va_ne).reshape(-1, 1, 1, 1)
         # Elevation esitamtion
         efft = np.fft.fft(afft, Ne, 0)
         efft = np.fft.fftshift(efft, 0)
@@ -634,8 +631,6 @@ class SCRadar(Lidar):
         """Generate point cloud."""
         # Calibrate raw data
         adc_samples = self._calibrate()
-
-        # virtual_array, coupling_calib = self._pre_process(adc_samples)
 
         # ntx: Number of TX antenna
         # nrx: Number of RX antenna
@@ -813,7 +808,7 @@ class SCRadar(Lidar):
 
         # Only consider azimuth on elevation 0
         virtual_array = self._pre_process(adc_samples)
-        virtual_array = np.sum(virtual_array, 0)
+        virtual_array =  virtual_array[0]
 
         # Na: Number of azimuth in the virtual array
         # Nc: Number of chirp per antenna in the virtual array
@@ -1030,6 +1025,7 @@ class SCRadar(Lidar):
         roffset: int = 15
 
         if not polar:
+            """
             hmap = np.zeros((Na * Nr, 3))
 
             for aidx, _az in enumerate(abins):
@@ -1047,8 +1043,20 @@ class SCRadar(Lidar):
                 hmap[:, 2],
                 c=hmap[:, 2],
             )
-            ax.set_xlabel("Azimuth (m)")
             ax.set(facecolor="black")
+            """
+            _r = np.kron(rbins[roffset:], np.cos(abins))
+            _az = np.kron(rbins[roffset:], np.sin(abins))
+            _pcl = np.transpose(dpcl, (1, 0))[roffset:, :].reshape(-1)
+            ax = plt.axes()
+            ax.scatter(
+                _az,        # hmap[:, 0],
+                _r ,        # hmap[:, 1],
+                _pcl,       # hmap[:, 2],
+                c=_pcl,     # hmap[:, 2],
+            )
+            ax.set(facecolor="black")
+            ax.set_xlabel("Azimuth (m)")
         else:
             dpcl = np.transpose(dpcl, (1, 0))
             az, rg = np.meshgrid(abins, rbins)

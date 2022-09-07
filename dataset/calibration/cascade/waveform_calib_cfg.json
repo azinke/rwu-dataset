@@ -1,0 +1,8 @@
+{
+  "ntx": 12,
+  "nrx": 16,
+  "data": {
+    "frequency": "frequency_calibration.bin",
+    "phase": "phase_amp_calibration.bin"
+  }
+}
