@@ -16,3 +16,7 @@ NUMBER_DOPPLER_BINS_MIN: int = 16
 
 # Minimum number of range bins
 NUMBER_RANGE_BINS_MIN: int = 256
+
+# DoA estimation methods
+# values: "fft", "esprit"
+DOA_METHOD: str = "esprit"
