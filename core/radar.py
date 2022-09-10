@@ -1041,15 +1041,10 @@ class SCRadar(Lidar):
         Ne, Na, Nv, Nr = signal_power.shape
         rbins, _, abins, _ = self._get_bins(Nr, None, Na, None)
 
-        # Noise filtering mask
-        sp = np.sum(signal_power, (0, 2))
-        mask, _ = rdsp.nq_cfar_2d(sp, self.CFAR_WS, self.CFAR_GC)
-
         dpcl = np.log10(signal_power)
         dpcl = np.sum(dpcl, (0, 2))
         dpcl -= np.min(dpcl)
         dpcl /= np.max(dpcl)
-        dpcl *= mask
 
         # Number of close range bins to skip
         roffset: int = 15
