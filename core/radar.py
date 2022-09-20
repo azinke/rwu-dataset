@@ -18,6 +18,7 @@ from core.config import NUMBER_DOPPLER_BINS_MIN
 from core.config import NUMBER_AZIMUTH_BINS_MIN
 from core.config import NUMBER_ELEVATION_BINS_MIN
 from core.config import DOA_METHOD
+from core.config import RDSP_METHOD
 
 
 class SCRadar(Lidar):
@@ -449,7 +450,7 @@ class SCRadar(Lidar):
         # Remove DC bias
         adc_samples -= np.mean(adc_samples)
 
-        adc_samples -= self.calibration.get_coupling_calibration()
+        # adc_samples -= self.calibration.get_coupling_calibration()
 
         if self.sensor != "scradar":
             adc_samples *= self.calibration.get_frequency_calibration()
@@ -610,6 +611,96 @@ class SCRadar(Lidar):
         )
         return virtual_array
 
+    def _fesprit(self):
+        """FESPRIT.
+
+        A combination of FFT and ESPRIT based radar signal processing.
+        The range, doppler, azimuth and elevation are all based on esprit while
+        FFT is used to produce the intermediate signals to use for the processing.
+        Unlike FFT (having sidelobes), the frequency estimation of ESPRIT is more
+        precise and makes much of the ADC samples usable.
+
+        NOTE: The current implementation is probably not much optimized and should
+        be improved
+        """
+        # Calibrated ADC samples
+        adc_samples = self._calibrate()
+        ntx, nrx, nc, ns = adc_samples.shape
+
+        C: float = rdsp.C  # Speed of light
+        fslope = self.calibration.waveform.fslope
+        fstart = self.calibration.waveform.fstart
+        fsample = self.calibration.waveform.fsample
+        # Ramp end time
+        te: float = self.calibration.waveform.ramp_end_time
+
+        # Chirp time
+        tc: float = self.calibration.waveform.idle_time + te
+
+        # Maximum range
+        rmax: int = rdsp.get_max_range(fsample, fslope)
+        # Maximum velocity
+        vmax: int = rdsp.get_max_velocity(ntx, fstart, tc)
+
+        # Range-Doppler FFT
+        rfft = np.fft.fft(adc_samples, ns, -1)
+        rfft -= self.calibration.get_coupling_calibration()
+        _rfft = np.abs(np.sum(rfft, (0, 1, 2)))
+        __gain = np.log10(_rfft + 1)
+
+        dfft = np.fft.fft(rfft, nc, -2)
+        dfft = np.fft.fftshift(dfft, -2)
+        vcomp = rdsp.velocity_compensation(ntx, nc)
+        dfft *= vcomp
+
+        # Range estimation with ESPRIT
+        radc = np.sum(adc_samples, (0, 1, 2))
+        resp = rdsp.esprit(radc, ns, ns)
+        _r = (fsample * (np.angle(resp) + np.pi ) * C) / (4 * np.pi * fslope)
+        ridx = (_r * ns / rmax).astype(np.int16) - 1
+
+        # Reshape the Range-FFT according to the virtual antenna layout
+        rva = rdsp.virtual_array(
+            rfft,
+            self.calibration.antenna.txl,
+            self.calibration.antenna.rxl,
+        )
+        # Reshape the Doppler-FFT according to the virtual antenna layout
+        va = rdsp.virtual_array(
+            dfft,
+            self.calibration.antenna.txl,
+            self.calibration.antenna.rxl,
+        )
+        va_ne, va_na, va_nc, _ = va.shape
+        __pcl = []
+
+        for idx, _ridx in enumerate(ridx):
+            # Azimuth estimation
+            sample = np.sum(va[:, :, :, _ridx], (0, 2))
+            azesp = rdsp.esprit(sample, va_na, 1)
+            _az = np.arcsin(np.angle(azesp) / np.pi)
+            aidx = np.abs(_az[0] * va_na / self.AZIMUTH_FOV).astype(np.int16) - 1
+
+            # Elevation estimation
+            esample = np.sum(va[:, aidx, :, _ridx], 1)
+            elesp = rdsp.esprit(esample, va_ne, 1)
+            _el = np.arcsin(np.angle(elesp) / (2.8 * np.pi))
+            eidx = np.abs(_el[0] * va_ne / self.ELEVATION_FOV).astype(np.int16) - 1
+
+            # Doppler velocity estimation
+            vsample = rva[eidx, aidx, :, _ridx]
+            vesp = rdsp.esprit(vsample, nc, nc//2)
+            __v = (C/fstart) * np.angle(vesp) / (4 * np.pi * ntx * tc)
+            # vidx = np.abs(_v[0] * nc / vmax).astype(np.int16) - 1
+            for _v in __v:
+                __pcl.append(np.array([
+                    _az[0],         # Azimuth
+                    _r[idx],        # Range
+                    _el[0],         # Elevation
+                    _v,          # Radial-Velocity
+                    __gain[idx],    # Gain
+                ]))
+        return np.array(__pcl)
 
     def _process_raw_adc(self) -> np.array:
         """Radar Signal Processing on raw ADC data.
@@ -789,7 +880,10 @@ class SCRadar(Lidar):
         # Maximum range
         rmax: float = rdsp.get_max_range(fs, fslope)
 
-        pcl = self._generate_radar_pcl()
+        if RDSP_METHOD == "fesprit":
+            pcl = self._fesprit()
+        else:
+            pcl = self._generate_radar_pcl()
         # Remove very close range
         pcl = pcl[pcl[:, 1] >= 1.5]
 
