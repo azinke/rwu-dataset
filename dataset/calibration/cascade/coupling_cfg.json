@@ -1,5 +1,6 @@
 {
   "ntx": 12,
   "nrx": 16,
+  "ns": 256,
   "data": "coupling_calibration.bin"
 }

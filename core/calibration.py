@@ -63,13 +63,14 @@ class CouplingCalibration:
             config = json.load(fh)
         self.nrx = config["nrx"]
         self.ntx = config["ntx"]
+        self.ns = config["ns"]
 
         binfile: str = os.sep.join([*filepath.split("/")[:-1], config["data"]])
         binfile = os.path.join(ROOTDIR, binfile)
         self.data = np.fromfile(binfile, dtype=np.float32, count=-1)
-        self.data = self.data.reshape(self.ntx, self.nrx, 2)
-        self.data = self.data[:, :, 0] + 1j * self.data[:, :, 1]
-        self.data = self.data.reshape(self.ntx, self.nrx, 1, 1)
+        self.data = self.data.reshape(self.ntx, self.nrx, self.ns, 2)
+        self.data = self.data[:, :, :, 0] + 1j * self.data[:, :, :, 1]
+        self.data = self.data.reshape(self.ntx, self.nrx, 1, -1)
 
 
 class HeatmapConfiguration:
@@ -219,9 +220,16 @@ class SCRadarCalibration:
         fdesign: float = self.antenna.fdesign
         self.d = 0.5 * ((fstart + (fslope * stime) / 2) / fdesign)
 
-    def get_coupling_calibration(self) -> np.array:
-        """Return the coupling calibration array to apply on the range fft."""
-        return self.coupling.data
+    def get_coupling_calibration(self, ns: int) -> np.array:
+        """Return the coupling calibration array to apply on the range fft.
+
+        Argument:
+            ns: FFT size to peform to obtain the coupling calibration.
+                This must be the as the used to compute the Range-FFT.
+                It assures that the coupling calibration matrix has a size that
+                fits any config (mainly the number of samples per chirp)
+        """
+        return np.fft.fft(self.coupling.data, ns, -1)
 
 class CCRadarCalibration(SCRadarCalibration):
     """Cascade Chip Radar Calibration.
