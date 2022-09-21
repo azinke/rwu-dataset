@@ -447,11 +447,6 @@ class SCRadar(Lidar):
             exit(1)
         adc_samples = self.raw
 
-        # Remove DC bias
-        adc_samples -= np.mean(adc_samples)
-
-        # adc_samples -= self.calibration.get_coupling_calibration()
-
         if self.sensor != "scradar":
             adc_samples *= self.calibration.get_frequency_calibration()
             adc_samples *= self.calibration.get_phase_calibration()
@@ -644,7 +639,7 @@ class SCRadar(Lidar):
 
         # Range-Doppler FFT
         rfft = np.fft.fft(adc_samples, ns, -1)
-        rfft -= self.calibration.get_coupling_calibration()
+        rfft -= self.calibration.get_coupling_calibration(ns)
         _rfft = np.abs(np.sum(rfft, (0, 1, 2)))
         __gain = np.log10(_rfft + 1)
 
