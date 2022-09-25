@@ -72,7 +72,8 @@ must be downloaded and unzipped in the `dataset` folder. Then, the folder struct
 
 The naming convention used for the folders containing recordings is `<name>-<dd-mm-yy><nn>`. With
 `<name>` a name describing the scene or the place of the recording, `<dd-mm-yy>` a 2-digit date format
- (`d`: day, `m`: month, `y`: year) and `<nn>` a 2-digit order number.
+ (`d`: day, `m`: month, `y`: year) and `<nn>` a 2-digit order number. Each of those data folders should
+ contain a configuration file (`confg.json`) that described the waveform configuration used to record it.
 
 In the snippet above, one can notice that multiple subset of the dataset are present in the `dataset`fodler.
 The key point to configure the supported subset of the dataset and how to access them is the
