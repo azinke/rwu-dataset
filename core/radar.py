@@ -639,9 +639,10 @@ class SCRadar(Lidar):
 
         # Range-Doppler FFT
         rfft = np.fft.fft(adc_samples, ns, -1)
-        rfft -= self.calibration.get_coupling_calibration(ns)
-        _rfft = np.abs(np.sum(rfft, (0, 1, 2)))
-        __gain = np.log10(_rfft + 1)
+        # rfft -= self.calibration.get_coupling_calibration(ns)
+        __gain = np.abs(np.sum(rfft, (0, 1, 2)))
+        __noise = np.quantile(__gain, 0.10)
+        __snr = 10 * np.log10(__gain / __noise)
 
         dfft = np.fft.fft(rfft, nc, -2)
         dfft = np.fft.fftshift(dfft, -2)
@@ -652,7 +653,7 @@ class SCRadar(Lidar):
         radc = np.sum(adc_samples, (0, 1, 2))
         resp = rdsp.esprit(radc, ns, ns)
         _r = (fsample * (np.angle(resp) + np.pi ) * C) / (4 * np.pi * fslope)
-        ridx = (_r * ns / rmax).astype(np.int16) - 1
+        ridx = (_r * (ns - 1) / rmax).astype(np.int16)
 
         # Reshape the Range-FFT according to the virtual antenna layout
         rva = rdsp.virtual_array(
@@ -674,27 +675,28 @@ class SCRadar(Lidar):
             sample = np.sum(va[:, :, :, _ridx], (0, 2))
             azesp = rdsp.esprit(sample, va_na, 1)
             _az = np.arcsin(np.angle(azesp) / np.pi)
-            aidx = np.abs(_az[0] * va_na / self.AZIMUTH_FOV).astype(np.int16) - 1
+            aidx = np.abs(_az[0] * (va_na - 1) / self.AZIMUTH_FOV).astype(np.int16)
 
             # Elevation estimation
             esample = np.sum(va[:, aidx, :, _ridx], 1)
             elesp = rdsp.esprit(esample, va_ne, 1)
             _el = np.arcsin(np.angle(elesp) / (2.8 * np.pi))
-            eidx = np.abs(_el[0] * va_ne / self.ELEVATION_FOV).astype(np.int16) - 1
+            # eidx = np.abs(_el[0] * va_ne / self.ELEVATION_FOV).astype(np.int16) - 1
 
             # Doppler velocity estimation
-            vsample = rva[eidx, aidx, :, _ridx]
-            vesp = rdsp.esprit(vsample, nc, nc//2)
-            __v = (C/fstart) * np.angle(vesp) / (4 * np.pi * ntx * tc)
-            # vidx = np.abs(_v[0] * nc / vmax).astype(np.int16) - 1
-            for _v in __v:
-                __pcl.append(np.array([
-                    _az[0],         # Azimuth
-                    _r[idx],        # Range
-                    _el[0],         # Elevation
-                    _v,          # Radial-Velocity
-                    __gain[idx],    # Gain
-                ]))
+            vsample = np.sum(rva[:, aidx, :, _ridx], 0)
+            vesp = rdsp.esprit(vsample, nc, 1)
+            _v = (C/fstart) * np.angle(vesp) / (4 * np.pi * ntx * tc)
+            # vidx = np.abs(_v * va_nc / vmax).astype(np.int16) - 1
+            # vidx = (np.angle(vesp) * (va_nc//2) / (2 * np.pi)).astype(np.int16) + (va_nc//2)
+
+            __pcl.append(np.array([
+                _az[0],         # Azimuth
+                _r[idx],        # Range
+                _el[0],         # Elevation
+                _v[0],          # Radial-Velocity
+                __snr[idx]      # Gain
+            ], dtype=np.float32))
         return np.array(__pcl)
 
     def _process_raw_adc(self) -> np.array:

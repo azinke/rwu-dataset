@@ -28,4 +28,4 @@ DOA_METHOD: str = "esprit"
 #     a precise frequency estimation for Range, Doppler and DOA. No need
 #     for CFAR
 # NOTE: "fesprit" is still being tested and optimized
-RDSP_METHOD: str = "fesprit"
+RDSP_METHOD: str = "normal"
