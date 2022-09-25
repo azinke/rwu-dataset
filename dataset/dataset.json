@@ -84,6 +84,30 @@
       {
         "codename": "calib3",
         "path": "calib-05092203"
+      },
+      {
+        "codename": "carspark0",
+        "path": "carspark-23092200"
+      },
+      {
+        "codename": "foam0",
+        "path": "foam-23092200"
+      },
+      {
+        "codename": "nofoam0",
+        "path": "nofoam-23092200"
+      },
+      {
+        "codename": "chessboard0",
+        "path": "chessboard-23092200"
+      },
+      {
+        "codename": "chessboard1",
+        "path": "chessboard-23092201"
+      },
+      {
+        "codename": "corridor0",
+        "path": "corridor-23092200"
       }
     ],
     "paths": {
