@@ -63,13 +63,11 @@ def music(signal: np.array, txl: np.array, rxl: np.array,
 
     N = len(signal)
     signal = np.asmatrix(signal)
+    signal -= np.mean(signal)
     # Covariance of the received signal
     R = (1.0 / N) * signal.H * signal
 
     eigval, eigvect = np.linalg.eig(R)
-    idx = eigval.argsort()[::-1]
-    eigval = eigval[idx]
-    eigvect = eigvect[:, idx]
 
     V = eigvect[:, :T]
     Noise = eigvect[:, T:]
@@ -91,12 +89,11 @@ def esprit(signal: np.array, order: int, nb_sources: int) -> np.array:
     """
     N = len(signal)
     signal = np.asmatrix(signal)
+    signal -= np.mean(signal)
     # Covariance of the received signal
     R = (1.0 / N) * signal.H * signal
 
     eigval, eigvect = np.linalg.eig(R)
-    idx = eigval.argsort()[::-1]
-    eigvect = eigvect[:, idx]
 
     s = eigvect[:, 0:nb_sources]
     s1 = s[0:order-1, :]
