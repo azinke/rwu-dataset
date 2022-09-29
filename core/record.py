@@ -13,7 +13,7 @@ import matplotlib.animation as anim
 import cv2 as cv
 
 from core.config import ROOTDIR, DATASET
-from core.lidar import Lidar
+from core.lidar import Velodyne
 from core.radar import CCRadar
 
 from .utils.common import error
@@ -65,8 +65,8 @@ class Record:
                     Possible Values: lidar, scradar, ccradar
         """
 
-        if sensor == "lidar":
-            self.lidar = Lidar(self.descriptor, self.calibration, self.index)
+        if sensor == "velodyne":
+            self.lidar = Velodyne(self.descriptor, self.calibration, self.index)
         elif sensor == "ccradar":
             self.calibration.ccradar.load_waveform_config(self.descriptor)
             self.ccradar = CCRadar(self.descriptor, self.calibration, self.index)
@@ -101,10 +101,10 @@ class Record:
         cpu_count: int = multiprocessing.cpu_count()
         print(f"Please wait! Processing on {cpu_count} CPU(s)")
 
-        if sensor == "lidar":
+        if sensor == "velodyne":
             dataset_path: str = os.path.join(
                 self.descriptor["paths"]["rootdir"],
-                self.descriptor["paths"][sensor]["data"]
+                self.descriptor["paths"][sensor]["pointcloud"]["data"]
             )
             nb_files: int = len(os.listdir(dataset_path)) - 1
             with multiprocessing.Pool(cpu_count) as pool:

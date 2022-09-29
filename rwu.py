@@ -47,6 +47,11 @@ def main () -> None:
         action="store_true"
     )
     parser.add_argument(
+        "--velodyne",
+        help="Render the Velodyne lidar pointcloud",
+        action="store_true"
+    )
+    parser.add_argument(
         "--ccradar",
         help="Render the cascade chip radar pointcloud",
         action="store_true"
@@ -212,8 +217,8 @@ def main () -> None:
         # Get an instance of the Record class
         record = coloradar.getRecord(args.dataset, args.index)
 
-        if args.lidar:
-            record.load("lidar")
+        if args.velodyne:
+            record.load("velodyne")
             if args.bird_eye_view:
                 info("Rendering lidar pointcloud bird eye view ...")
                 bev = record.lidar.getBirdEyeView(
@@ -267,10 +272,10 @@ def main () -> None:
 
     elif args.dataset and args.save_to:
         record = coloradar.getRecord(args.dataset, 0)
-        if args.lidar:
+        if args.velodyne:
             info(f"Generated batches of lidar heatmap from '{args.dataset}'")
             record.process_and_save(
-                "lidar",
+                "velodyne",
                 resolution=args.resolution,
                 srange=(-args.width/2, args.width/2),
                 frange=(-args.height/2, args.height/2),
