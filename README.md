@@ -76,6 +76,30 @@ The naming convention used for the folders containing recordings is `<name>-<dd-
  contain a configuration file (`confg.json`) that described the waveform configuration used to record it.
 
 In the snippet above, one can notice that multiple subset of the dataset are present in the `dataset`fodler.
+Each of those subsets is expected to have the following structure:
+
+```txt
+.
+└── <name>-<dd-mm-yy><nn>
+    ├── cascade
+    |   ├── adc_samples
+    |   |   ├──frame1.bin
+    |   |   .
+    |   |   .
+    |   |   .
+    |   |   └──frame<n>.bin
+    |   └── config.json
+    └── velodyne
+        ├──<velodyne frame 1>.cvs
+        .
+        .
+        .
+        └──<velodyne frame n>.cvs
+```
+
+The `cascade/adc_samples` should contain the radar frames (repacked data files from `mmwave-repack`);
+And the Velodyne's recordings under the subfolder `velodyne`.
+
 The key point to configure the supported subset of the dataset and how to access them is the
 `dataset/dataset.json` file.
 
@@ -161,7 +185,28 @@ python rwu.py -o --codename
 python rwu.py --overview --codename
 ```
 
-2. Radar sensor
+2. Velodyne sensor
+
+```bash
+# Render Velodyne lidar 3D pointcloud
+python coloradar.py --dataset <codename> -i <frame-index> --velodyne
+
+# Render Velodyne lidar pointcloud bird eye view
+python coloradar.py --dataset <codename> -i <frame-index> --velodyne -bev
+python coloradar.py --dataset <codename> -i <frame-index> --velodyne --bird-eye-view
+```
+
+See examples below:
+
+```bash
+# Render Velodyne lidar 3D pointcloud
+python coloradar.py --dataset lidar0 -i 130 --velodyne
+
+# Render Velodyne lidar pointcloud bird eye view
+python coloradar.py --dataset lidar0 -i 175 --velodyne -bev
+```
+
+3. Radar sensor
 
 The shorthand used to access the cascaded chip radar data is `ccradar`. Therefore, we have the
 following commands
@@ -213,7 +258,7 @@ python rwu.py --dataset parking1 -i 65 --ccradar --raw --min-range 1.5 --thresho
 python rwu.py --dataset parking4 -i 175 --ccradar --raw -pcl -bev
 ```
 
-3. Batched processing and save output
+4. Batched processing and save output
 
 You can note that the index option `-i` is no longer needed. The path given for
 the `save-to` option could be a non-existing one. The path will automatically be
@@ -222,9 +267,12 @@ created in that case.
 ```bash
 # Render and save all cascaded chip radar plointcloud bird eye view of a given subset of the dataset
 python rwu.py --dataset <codename> --ccradar --raw -pcl -bev --save-to <output-directory>
+
+# Render and save all Velodyne lidar plointcloud bird eye view of a given subset of the dataset
+python rwu.py --dataset <codename> --velodyne -bev --save-to <output-directory>
 ```
 
-4. Animation
+5. Animation
 
 ```bash
 # Create a video out of the images present in the input folder provided

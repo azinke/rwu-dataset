@@ -108,6 +108,18 @@
       {
         "codename": "corridor0",
         "path": "corridor-23092200"
+      },
+      {
+        "codename": "lidar0",
+        "path": "ld-outdoor-02092200"
+      },
+      {
+        "codename": "lidar1",
+        "path": "ld-outdoor-02092201"
+      },
+      {
+        "codename": "lidar2",
+        "path": "ld-outdoor-02092202"
       }
     ],
     "paths": {
@@ -126,6 +138,12 @@
         "pointcloud": {
           "timestamp": "",
           "data": "",
+          "filename_prefix": ""
+        }
+      },
+      "velodyne": {
+        "pointcloud": {
+          "data": "velodyne",
           "filename_prefix": ""
         }
       }

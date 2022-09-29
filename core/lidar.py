@@ -201,3 +201,67 @@ class Lidar(object):
             name of the file in the dataset
         """
         return basename + str(index) + "." + ext
+
+
+class Velodyne(Lidar):
+    """Velodyne Lidar."""
+
+    # The recorded attributes are:
+    # I, ID, Az, D, AT, T, El, X, Y, Z
+    #
+    # I: Intensity of reflection
+    # ID: Laser ID
+    # Az: Azimuth of reflected signal (Deg)
+    # D: Distance (m)
+    # AT: Adjusted time
+    # T: Timestamp
+    # El: Elevation of reflected signal (Deg)
+    # X, Y, Z: cartesian coordinates of the reflected path
+    NUMBER_RECORDING_ATTRIBUTES: int = 10
+
+    def __init__(self, config: dict[str, str], calib, index: int) -> None:
+        """Init.
+
+        Argument:
+            config (dict): Paths to access the dataset
+            calib (Calibration): Calibration object (See calibration.py)
+            index (int): Index of the lidar record to load
+        """
+        self.calibration = calib
+        # List of velodyne 'cvs' files in dataset
+        dirlist: list[str] = os.listdir(
+            os.path.join(
+            config["paths"]["rootdir"],
+            config["paths"]["velodyne"]["pointcloud"]["data"])
+        )
+        dirlist = np.sort(dirlist)
+        self.filepath: str = os.path.join(
+            config["paths"]["rootdir"],
+            config["paths"]["velodyne"]["pointcloud"]["data"],
+            dirlist[index],
+        )
+        try:
+            """
+            dt = np.dtype([
+                ("Intensity", np.uint8),
+                ("LaserID", np.uint8),
+                ("Azimuth", np.uint16),         # in Deg
+                ("Distance", np.float32),       # in Meter
+                ("AdjustedTime", np.float32),   # in Meter
+                ("Timestamp", np.uint64),       # in Meter
+                ("Elevation", np.uint16),       # in Deg
+                ("X", np.float32),              # in Meter
+                ("Y", np.float32),              # in Meter
+                ("Z", np.float32),              # in Meter
+            ])
+            """
+            cld = np.loadtxt(
+                self.filepath,
+                delimiter=",",
+                skiprows=1,     # Skip first row (header)
+            )
+            cld = cld[:, (7, 8, 9, 0, 5, 4, 3, 2, 6, 1)]
+            self.cld = cld[:, :4]
+        except FileNotFoundError:
+            error(f"File '{self.filepath}' not found.")
+            sys.exit(1)
