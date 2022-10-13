@@ -9,7 +9,7 @@ Instruments.
 
 ## Environment setup
 
-**Note**: *At least python `3.10` is needed to setup this tool for usage.*
+**Note**: *At least python `3.10` is needed to set up this tool for usage.*
 
 Create a python virtual environment and install the required packages as follows
 
@@ -73,9 +73,9 @@ must be downloaded and unzipped in the `dataset` folder. Then, the folder struct
 The naming convention used for the folders containing recordings is `<name>-<dd-mm-yy><nn>`. With
 `<name>` a name describing the scene or the place of the recording, `<dd-mm-yy>` a 2-digit date format
  (`d`: day, `m`: month, `y`: year) and `<nn>` a 2-digit order number. Each of those data folders should
- contain a configuration file (`confg.json`) that described the waveform configuration used to record it.
+ contain a configuration file (`confg.json`) that describes the waveform configuration used to record it.
 
-In the snippet above, one can notice that multiple subset of the dataset are present in the `dataset`fodler.
+In the snippet above, one can notice that multiple subset of the dataset are present in the `dataset` folder.
 Each of those subsets is expected to have the following structure:
 
 ```txt
@@ -154,7 +154,7 @@ dataset.
 - _If you've setted up a virtual environment, don't forget to enable it first_
 - _Rendering are done based on a web based backend. So, a web browser tab will automatically be launched for all renderings._
 
-The easiest way to have an overview of all the available options to interact with the datatset
+The easiest way to have an overview of all the available options to interact with the dataset
 is the help command.
 
 
@@ -177,7 +177,7 @@ Either one of this command pretty print the entire `dataset/dataset.json` file t
 overview of the current configuration in use.
 
 Since each subset of the dataset receives a codename to interact with it, you can request
-the list of currently registered subsets of the dataset and their codenames as follow:
+the list of currently registered subsets of the dataset and their codenames as follows:
 
 ```bash
 # Get the list of registered dataset and their codenames
@@ -258,7 +258,7 @@ python rwu.py --dataset parking1 -i 65 --ccradar --raw --min-range 1.5 --thresho
 python rwu.py --dataset parking4 -i 175 --ccradar --raw -pcl -bev
 ```
 
-4. Batched processing and save output
+4. Batched processing and save outputs
 
 You can note that the index option `-i` is no longer needed. The path given for
 the `save-to` option could be a non-existing one. The path will automatically be
