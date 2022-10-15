@@ -120,6 +120,22 @@
       {
         "codename": "lidar2",
         "path": "ld-outdoor-02092202"
+      },
+      {
+        "codename": "rwu-walk",
+        "path": "rwu-walk-09102200"
+      },
+      {
+        "codename": "rwu-car0",
+        "path": "rwu-car-09102200"
+      },
+      {
+        "codename": "rwu-car1",
+        "path": "rwu-car-09102201"
+      },
+      {
+        "codename": "rwu-bike",
+        "path": "rwu-bike-09102200"
       }
     ],
     "paths": {
