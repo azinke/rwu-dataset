@@ -279,7 +279,7 @@ def get_velocity_bins(ntx: int, nv: int, fstart: float, tc: float) -> np.array:
     # Not the actual radar resolution
     vres = vmax / nv
 
-    bins = np.arange(-vmax/2, vmax/2, vres)
+    bins = np.arange(-vmax, vmax, 2 * vres)
     return bins
 
 
@@ -452,4 +452,3 @@ def velocity_compensation( ntx, nc) -> None:
     vcomp = np.exp(-2j * np.pi * tcl)
     vcomp = vcomp.reshape(ntx, 1, nc, 1)
     return vcomp
-
