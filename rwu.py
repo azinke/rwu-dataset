@@ -190,6 +190,12 @@ def main () -> None:
         default=1,
     )
     parser.add_argument(
+        "-s", "--save-as",
+        help="Save post-processed ADC samples in files.",
+        type=str,
+        default="csv",
+    )
+    parser.add_argument(
         "--save-to",
         help="Destination folder to save the processed data to.",
         type=str,
@@ -269,7 +275,9 @@ def main () -> None:
                 )
                 success("Successfully closed!")
                 sys.exit(0)
-
+            info("Rendering single chip radar pointcloud ...")
+            record.ccradar.show()
+            sys.exit(0)
     elif args.dataset and args.save_to:
         record = coloradar.getRecord(args.dataset, 0)
         if args.velodyne:
@@ -303,6 +311,7 @@ def main () -> None:
                     start_index=args.start_index,
                     camera_view=args.camera_view,
                     pointcloud=True,
+                    save_as=args.save_as,
                 )
                 success("Radar pointcloud generated with success!")
                 sys.exit(0)

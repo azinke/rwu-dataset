@@ -69,8 +69,15 @@ class SCRadar(Lidar):
         # Read pointcloud
         self.cld = self._load(
             index, "pointcloud", np.float32,
-            (-1, self.NUMBER_RECORDING_ATTRIBUTES)
+            (-1, self.NUMBER_RECORDING_ATTRIBUTES),
+            "csv"
         )
+        # 0: Azimuth
+        # 1: Range
+        # 2: Elevation
+        # 4: SNR (dB)
+        # 5: Velocity
+        self.cld = self.cld[:, (0, 1 , 2, 4, 3)]
 
         if hasattr(self.calibration, "heatmap") and self.calibration.heatmap:
             # Read heatmap
@@ -104,7 +111,7 @@ class SCRadar(Lidar):
                 self.raw = I + 1j * Q
 
     def _load(self, index: int, ftype: str, dtype: np.dtype,
-              shape: tuple[int, ...]) -> Optional[np.array]:
+              shape: tuple[int, ...], ext: str = "bin") -> Optional[np.array]:
         """Load data.
 
         Arguments:
@@ -121,7 +128,7 @@ class SCRadar(Lidar):
         filename = self._filename(
             self.config["paths"][self.sensor][ftype]["filename_prefix"],
             index,
-            "bin"
+            ext
         )
         filepath = os.path.join(
             self.config["paths"]["rootdir"],
@@ -129,8 +136,16 @@ class SCRadar(Lidar):
             filename
         )
         try:
-            data = np.fromfile(filepath, dtype)
-            data = np.reshape(data, shape)
+            if ext == "bin":
+                data = np.fromfile(filepath, dtype)
+                data = np.reshape(data, shape)
+            elif ext == "csv":
+                data = np.loadtxt(
+                    filepath,
+                    dtype=np.float32,
+                    delimiter=",",
+                    skiprows=1
+                )
         except FileNotFoundError:
             data = None
         return data
@@ -896,13 +911,16 @@ class SCRadar(Lidar):
                     ]))
         return np.array(pcl)
 
-    def showPointcloudFromRaw(self,
-            velocity_view: bool = False,
-            bird_eye_view: bool = False, polar: bool = False, **kwargs) -> None:
-        """Render pointcloud of detected object from radar signal processing.
+    def getPointcloudFromRaw(self, polar: bool = False) -> np.array:
+        """Point post-processed radar pointcloud.
 
-        Arguments:
-            bird_eye_view: Enable 2D Bird Eye View rendering
+        Return:
+            Pointcloud in the following format:
+                [0]: Azimuth
+                [1]: Range
+                [2]: Elevation
+                [3]: Velocity
+                [4]: Intensity of reflection in dB or SNR
         """
         # ADC sampling frequency
         fs: float = self.calibration.waveform.fsample
@@ -924,12 +942,33 @@ class SCRadar(Lidar):
         # those detections are not reliable
         pcl = pcl[pcl[:, 1] < (0.95 * rmax)]
         pcl = pcl[pcl[:, 4] > np.max(pcl[:, 4]) * 0.4]
+        if not polar:
+            pcl = self._to_cartesian(pcl)
+        return pcl
+
+    def showPointcloudFromRaw(self,
+            velocity_view: bool = False,
+            bird_eye_view: bool = False, polar: bool = False, **kwargs) -> None:
+        """Render pointcloud of detected object from radar signal processing.
+
+        Arguments:
+            bird_eye_view: Enable 2D Bird Eye View rendering
+        """
+        # ADC sampling frequency
+        fs: float = self.calibration.waveform.fsample
+
+        # Frequency slope
+        fslope: float = self.calibration.waveform.fslope
+
+        # Maximum range
+        rmax: float = rdsp.get_max_range(fs, fslope)
+
+        # Get pointclouds
+        pcl = self.getPointcloudFromRaw(polar)
 
         xlabel: str = ""
         ylabel: str = ""
 
-        if not polar:
-            pcl = self._to_cartesian(pcl)
         if bird_eye_view:
             ax = plt.axes()
             ax.set_title(f"BEV | Frame {self.index:04}")

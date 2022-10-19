@@ -88,6 +88,12 @@ Each of those subsets is expected to have the following structure:
     |   |   .
     |   |   .
     |   |   └──frame<n>.bin
+    |   ├── pointclouds
+    |   |   ├──radar_pcl1.bin
+    |   |   .
+    |   |   .
+    |   |   .
+    |   |   └──radar_pcl<n>.bin
     |   └── config.json
     └── velodyne
         ├──<velodyne frame 1>.cvs
@@ -98,7 +104,8 @@ Each of those subsets is expected to have the following structure:
 ```
 
 The `cascade/adc_samples` should contain the radar frames (repacked data files from `mmwave-repack`);
-And the Velodyne's recordings under the subfolder `velodyne`.
+And the Velodyne's recordings under the subfolder `velodyne`. Folder `cascade/pointclouds` contains already
+processed point-clouds
 
 The key point to configure the supported subset of the dataset and how to access them is the
 `dataset/dataset.json` file.
@@ -211,6 +218,13 @@ python coloradar.py --dataset lidar0 -i 175 --velodyne -bev
 The shorthand used to access the cascaded chip radar data is `ccradar`. Therefore, we have the
 following commands
 
+To render already processed point-clouds, the following command can be issued:
+
+```bash
+# Render radar pointcloud
+python rwu.py --dataset <codename> -i <frame-index> --ccradar
+```
+
 ```bash
 #
 # Processing or raw ADC samples
@@ -272,7 +286,22 @@ python rwu.py --dataset <codename> --ccradar --raw -pcl -bev --save-to <output-d
 python rwu.py --dataset <codename> --velodyne -bev --save-to <output-directory>
 ```
 
-5. Animation
+5. Save post-processed files as `.csv` or `.bin` files
+
+The placeholder `<ext>` could be either `csv` or `bin`. Binary files are saved as float32 values.
+
+- `csv`: Comma Separated Value
+- `bin`: Binary
+
+```bash
+# Save all cascaded chip radar plointcloud of a given subset of the dataset as "csv" or "bin" files
+python rwu.py --dataset <codename> --ccradar --raw -pcl --save-as <ext> --save-to <output-directory>
+
+# Example for saving post-processed pointcloud as csv files
+python rwu.py --dataset parking0 --ccradar --raw -pcl --save-as csv --save-to output
+```
+
+6. Animation
 
 ```bash
 # Create a video out of the images present in the input folder provided
