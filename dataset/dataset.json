@@ -153,8 +153,8 @@
         },
         "pointcloud": {
           "timestamp": "",
-          "data": "",
-          "filename_prefix": ""
+          "data": "cascade/pointclouds",
+          "filename_prefix": "radar_pcl"
         }
       },
       "velodyne": {
