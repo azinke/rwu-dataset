@@ -243,7 +243,19 @@ def main () -> None:
             sys.exit(0)
         elif args.ccradar:
             record.load("ccradar")
-            if args.heatmap:
+            if args.bird_eye_view:
+                info("Rendering cascaded chip radar pointcloud bird eye view ...")
+                bev = record.ccradar.getBirdEyeView(
+                    args.resolution,
+                    (-args.width/2, args.width/2),
+                    (-args.height/2, args.height/2),
+                )
+                success("Bird Eye View successfully rendred!")
+                plt.imshow(bev)
+                plt.show()
+                info("Bird Eye View closed!")
+                sys.exit(0)
+            elif args.heatmap:
                 info("Rendering cascade chip radar heatmap ...")
                 record.ccradar.showHeatmap(args.threshold, args.no_sidelobe)
                 success("Heatmap closed!")
