@@ -223,6 +223,9 @@ To render already processed point-clouds, the following command can be issued:
 ```bash
 # Render radar pointcloud
 python rwu.py --dataset <codename> -i <frame-index> --ccradar
+
+# Render cascaded chip radar birds' eye view from 3D pointcloud
+python rwu.py --dataset <codename> -i <frame-index> --ccradar -bev
 ```
 
 ```bash
@@ -299,6 +302,19 @@ python rwu.py --dataset <codename> --ccradar --raw -pcl --save-as <ext> --save-t
 
 # Example for saving post-processed pointcloud as csv files
 python rwu.py --dataset parking0 --ccradar --raw -pcl --save-as csv --save-to output
+```
+
+If binary files have been generated, they can be read as follows:
+
+```python
+import numpy as np
+
+# [0]: Azimuth
+# [1]: Range
+# [2]: Elevation
+# [3]: Velocity
+# [4]: Intensity of reflection in dB or SNR
+data = np.fromfile(fileptah, dtype=np.float32, count=-1).reshape(-1, 5)
 ```
 
 6. Animation
