@@ -225,7 +225,7 @@ To render already processed point-clouds, the following command can be issued:
 python rwu.py --dataset <codename> -i <frame-index> --ccradar
 
 # Render cascaded chip radar birds' eye view from 3D pointcloud
-# The resolution is in meter
+# The resolution is in meter/pixel
 # 0.1 -> 10cm / pixel
 python rwu.py --dataset <codename> -i <frame-index> --ccradar -bev --resolution <resolution>
 ```
