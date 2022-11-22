@@ -243,7 +243,7 @@ def main () -> None:
             sys.exit(0)
         elif args.ccradar:
             record.load("ccradar")
-            if args.bird_eye_view:
+            if args.bird_eye_view and (not args.raw):
                 info("Rendering cascaded chip radar pointcloud bird eye view ...")
                 bev = record.ccradar.getBirdEyeView(
                     args.resolution,
@@ -287,7 +287,7 @@ def main () -> None:
                 )
                 success("Successfully closed!")
                 sys.exit(0)
-            info("Rendering single chip radar pointcloud ...")
+            info("Rendering cascade chip radar pointcloud ...")
             record.ccradar.show()
             sys.exit(0)
     elif args.dataset and args.save_to:
