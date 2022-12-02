@@ -72,12 +72,13 @@ class SCRadar(Lidar):
             (-1, self.NUMBER_RECORDING_ATTRIBUTES),
             "csv"
         )
-        # 0: Azimuth
-        # 1: Range
-        # 2: Elevation
-        # 4: SNR (dB)
-        # 5: Velocity
-        self.cld = self.cld[:, (0, 1 , 2, 4, 3)]
+        if self.cld is not None:
+            # 0: Azimuth
+            # 1: Range
+            # 2: Elevation
+            # 4: SNR (dB)
+            # 5: Velocity
+            self.cld = self.cld[:, (0, 1 , 2, 4, 3)]
 
         if hasattr(self.calibration, "heatmap") and self.calibration.heatmap:
             # Read heatmap
