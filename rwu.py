@@ -191,9 +191,9 @@ def main () -> None:
     )
     parser.add_argument(
         "-s", "--save-as",
-        help="Save post-processed ADC samples in files.",
+        help="Save post-processed ADC samples in files. Values: 'csv', 'bin'",
         type=str,
-        default="csv",
+        default="",
     )
     parser.add_argument(
         "--save-to",
