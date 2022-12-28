@@ -1138,7 +1138,7 @@ class SCRadar(Lidar):
             hmap = hmap[hmap[:, 0] < max_az]
 
         hmap = hmap[hmap[:, 4] > threshold]
-        hmap = hmap[hmap[:, 4] >  0]
+
         hmap[:, 4] -= np.min(hmap[:, 4])
         hmap[:, 4] /= np.max(hmap[:, 4])
 
