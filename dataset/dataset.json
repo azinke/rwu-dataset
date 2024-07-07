@@ -136,6 +136,18 @@
       {
         "codename": "rwu-bike",
         "path": "rwu-bike-09102200"
+      },
+      {
+        "codename": "parkinglot-foam",
+        "path": "ParkingLot_Foam_271122_Frames"
+      },
+      {
+        "codename": "parkinglot-nofoam",
+        "path": "ParkingLot_NoFoam_271122_Frames"
+      },
+      {
+        "codename": "parkinglot0",
+        "path": "ParkingLot_271122_Frames"
       }
     ],
     "paths": {
