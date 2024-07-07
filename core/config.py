@@ -36,11 +36,11 @@ RDSP_METHOD: str = "normal"
 # 2D Range-Doppler OS-CFAR Parameters used for generating
 # radar pointclouds
 RD_OS_CFAR_WS: int = 8         # Window size
-RD_OS_CFAR_GS: int = 1         # Guard cell
+RD_OS_CFAR_GS: int = 2         # Guard cell
 RD_OS_CFAR_K: float = 0.75     # n'th quantile
 RD_OS_CFAR_TOS: int = 6        # Tos factor
 
 # 1D OS-CFAR Parameters used for peak selection in Azimuth-FFT
-AZ_OS_CFAR_WS: int = 64         # Window size
-AZ_OS_CFAR_GS: int = 1          # Guard cell
-AZ_OS_CFAR_TOS: int = 2         # Tos factor
+AZ_OS_CFAR_WS: int = 32         # Window size
+AZ_OS_CFAR_GS: int = 16         # Guard cell
+AZ_OS_CFAR_TOS: int = 4         # Tos factor
